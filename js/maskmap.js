@@ -7,6 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: 'Create by <a href="mail:yjc.ptt@gmail.com">YJC</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
+var markers = new L.MarkerClusterGroup().addTo(map);;
 
 // 取得使用者當前座標
 if ("geolocation" in navigator) {
@@ -43,80 +44,58 @@ let getMask = new XMLHttpRequest();
         let getMaskData = JSON.parse(getMask.responseText);
         // console.table(getMaskData.features);
 
-        // 搜尋藥局 function
-        function search() {
-            if (document.getElementById('search').value == '') {
-                alert('請輸入關鍵字齁!');
-                return
-            };
-            // 地圖回歸中心點
-            map.setView([23.817844, 119.990917], 5);
-
-            // 開始搜尋
-            let result = '';
-            let resultTotal = 0;
-            for (let num = 0; num < getMaskData.features.length; num++) {
-                if (getMaskData.features[num].properties.name.indexOf(document.getElementById('search').value) != -1) {
-                    //console.log(getMaskData.features[num].properties.name);
-                    result += '<a href="#" class="result-link d-block border" style="padding:2px 8px; margin:2px 0;" data-info="' + num + '">' + getMaskData.features[num].properties.name + '</a>';
-                    resultTotal += 1;
-                };
-            };
-
-            document.getElementById('search-result').innerHTML = '<div class="text-center" style="margin:16px 0 14px 0;">得到筆數 : ' + resultTotal + '</div>' + result;
-
-            for (let x = 0; x < document.querySelectorAll('.result-link').length; x++) {
-                document.querySelectorAll('.result-link')[x].addEventListener('click', () => {
-                    //console.log(document.querySelectorAll('.result-link')[x].dataset.loa);
-                    //console.log(document.querySelectorAll('.result-link')[x].dataset.geo);
-                    //console.log(document.querySelectorAll('.result-link')[x].dataset.info);
-                    map.setView([getMaskData.features[document.querySelectorAll('.result-link')[x].dataset.info].geometry.coordinates[1], getMaskData.features[document.querySelectorAll('.result-link')[x].dataset.info].geometry.coordinates[0]], 25);
-                    markers[document.querySelectorAll('.result-link')[x].dataset.info].openPopup();
-                });
-            };
-        };
-
         // 藥局資料
-        let markers = [];
+        // let markers = [];
         for (var i = 0; i < getMaskData.features.length; i++) {
             // 內文
             infoStr =
                 '<h1> ' + getMaskData.features[i].properties.name + '</h1>' +
-                '<div class="border-bottom my-1">電話：<a href="tel:' + getPhoneNumber() + '">'+ getMaskData.features[i].properties.phone +'</a></div>' +
-                '<div class="border-bottom">地址：' + getMaskData.features[i].properties.address +'</div>' +
-                '<div> ▼ <a href="http://maps.google.com.tw/maps?q=' + getMaskData.features[i].properties.address + '">導航</a></div><br/>' +
-                '<div class="border-bottom my-1">成人口罩數量：' + getMaskData.features[i].properties.mask_adult + '</div>' +
-                '<div class="border-bottom">兒童口罩數量：' + getMaskData.features[i].properties.mask_child + '</div>' +
-                '<div class="border-bottom my-1">備註：' + getMaskData.features[i].properties.note + '</div>';
+                '<div>' + getMaskData.features[i].properties.address +'</div>' +
+                '<div>聯絡電話｜<a href="tel:' + getPhoneNumber() + '">'+ getMaskData.features[i].properties.phone +'</a> ☎</div>' +
+                '<div>更新時間｜' + getMaskData.features[i].properties.updated +'</a></div>' +
+                '<div>備註：' + getMaskData.features[i].properties.note + '</div>' +
+                '<div class="btn mask-amount" style="background:' + getColor(getMaskData.features[i].properties.mask_adult) + '">成人口罩 ' + getMaskData.features[i].properties.mask_adult + '個</div>' +
+                '<div class="btn mask-amount" style="background:' + getColor(getMaskData.features[i].properties.mask_child) + '">兒童口罩 ' + getMaskData.features[i].properties.mask_child + '個</div>' +
+                '<a class="btn navigation" href="http://maps.google.com.tw/maps?q=' + getMaskData.features[i].properties.address + '">Google 路線導航</a>';
 
             // 依庫存數量判定顏色
-            // 紅色:庫存=0
+            // 灰色:庫存=0
             if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child == 0) {
                 circleMarkerOptions = {
                     weight: 2,
-                    color: "red"
+                    color: "#6C757D"
                 };
-                markers.push(L.circleMarker(getRandomLatLng(), circleMarkerOptions).addTo(map).bindPopup(infoStr));
-                // L.marker(getRandomLatLng(), {icon: redIcon}).addTo(map).bindPopup(infoStr);
-            // 黃色:庫存<50
+                markers.addLayer(L.marker(getLatLng(), {icon: greyIcon}).bindPopup(infoStr));
+            // 紅色:庫存<50
             } else if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child < 50) {
                 circleMarkerOptions = {
                     weight: 2,
-                    color: "orange"
+                    color: "#E31A1C"
                 };
-                markers.push(L.circleMarker(getRandomLatLng(), circleMarkerOptions).addTo(map).bindPopup(infoStr));
-                // L.marker(getRandomLatLng(), {icon: yellowIcon}).addTo(map).bindPopup(infoStr);
+                markers.addLayer(L.marker(getLatLng(), {icon: redIcon}).bindPopup(infoStr));
+            // 黃色:庫存<50
+            } else if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child < 100) {
+                circleMarkerOptions = {
+                    weight: 2,
+                    color: "#FD8D3C"
+                };
+                markers.addLayer(L.marker(getLatLng(), {icon: yellowIcon}).bindPopup(infoStr));
             // 綠色:庫存>100
             } else {
                 circleMarkerOptions = {
                     weight: 2,
-                    color: "green"
+                    color: "#155724"
                 };
-                markers.push(L.circleMarker(getRandomLatLng(), circleMarkerOptions).addTo(map).bindPopup(infoStr));
-                // L.marker(getRandomLatLng(), {icon: greenIcon}).addTo(map).bindPopup(infoStr);
+                markers.addLayer(L.marker(getLatLng(), {icon: greenIcon}).bindPopup(infoStr));
             };
         };
-
+        map.addLayer(markers);
+        // 取得座標
+        function getLatLng() {
+            return [
+                getMaskData.features[i].geometry.coordinates[1], getMaskData.features[i].geometry.coordinates[0]
+            ];
+        };
         // 取得電話號碼
         function getPhoneNumber(){
             return[
@@ -126,36 +105,41 @@ let getMask = new XMLHttpRequest();
         // 導航
         function goNavigation(){
             return[
-                getMaskData.features[i].properties.phone.replace(/ |-/g,"")
+                //TODO:地址處理
             ];
         }
-        // 取得座標
-        function getRandomLatLng() {
-            return [
-                getMaskData.features[i].geometry.coordinates[1], getMaskData.features[i].geometry.coordinates[0]
-            ];
-        };
     }
 
-// 地圖標示說明
-L.Control.Watermark = L.Control.extend({
-    onAdd: function(map) {
-        let layer = L.DomUtil.create('div');
-        layer.innerHTML =
-            '<section class="info-board">' +
-            '<div>口罩數為 0 : 紅標</div>' +
-            '<div>口罩數小於 50 : 黃標</div>' +
-            '<div>口罩數大於 100 : 綠標</div>' +
-            '</section>';
-        return layer;
-    },
-    onRemove: function(map) {
-        // TODO
-    }
-});
-
-L.control.watermark = function(opts) {
-    return new L.Control.Watermark(opts);
+// 地圖資訊
+var infoMap = L.control();
+infoMap.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info-map'); // 建立div元素，並包含map-info的class屬性
+    div.innerHTML = '<b>台灣藥局口罩庫存地圖</b><br/>地圖資料每 30 秒更新一次。';
+    return div;
 };
+infoMap.addTo(map);
 
-L.control.watermark({ position: 'bottomleft' }).addTo(map);
+// 標示資訊
+var infoLegend = L.control({position: 'bottomleft'});
+infoLegend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'info-legend'),
+        grades = [0, 50, 100],
+        labels = [];
+    div.innerHTML = '口罩數量<br>' +
+                    '<i style="background:' + getColor(grades[0]) + '"></i> 無庫存 <br>'
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+    return div;
+};
+infoLegend.addTo(map);
+
+// 庫存顏色
+function getColor(d) {
+    return d > 100  ? '#155724' :
+           d > 50   ? '#FD8D3C' :
+           d > 0    ? '#E31A1C' : 
+                      '#6C757D';
+}
