@@ -5,7 +5,6 @@ body {
   font-family: "Google Sans", Roboto, "Noto Sans TC", Arial, sans-serif !important;
 }
 a {
-  /* color: #007bff; */
   text-decoration: none;
   background-color: transparent;
   -webkit-text-decoration-skip: objects;
@@ -125,6 +124,26 @@ fieldset:disabled a.btn {
 }
 
 .btn-secondary {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.card{
+  display: flex;
+}
+
+.card>div{
+  flex: 1 1 50%;
+}
+
+.open{
+  color: #fff;
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.close{
   color: #fff;
   background-color: #6c757d;
   border-color: #6c757d;

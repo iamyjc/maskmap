@@ -47,6 +47,8 @@ let getMask = new XMLHttpRequest();
         // 藥局資料
         // let markers = [];
         for (var i = 0; i < getMaskData.features.length; i++) {
+            //計算營業日
+            var today = 
             // 內文
             infoStr =
                 '<h1> ' + getMaskData.features[i].properties.name + '</h1>' +
@@ -54,9 +56,12 @@ let getMask = new XMLHttpRequest();
                 '<div>聯絡電話｜<a href="tel:' + getPhoneNumber() + '">'+ getMaskData.features[i].properties.phone +'</a> ☎</div>' +
                 '<div>更新時間｜' + getMaskData.features[i].properties.updated +'</a></div>' +
                 '<div>備註：' + getMaskData.features[i].properties.note + '</div>' +
+                '<div class="card">' + getBusinessInfo(getMaskData.features[i].properties.available) + '</div>' +
+                '<div class="card">' +
                 '<div class="btn mask-amount" style="background:' + getColor(getMaskData.features[i].properties.mask_adult) + '">成人口罩 ' + getMaskData.features[i].properties.mask_adult + '個</div>' +
                 '<div class="btn mask-amount" style="background:' + getColor(getMaskData.features[i].properties.mask_child) + '">兒童口罩 ' + getMaskData.features[i].properties.mask_child + '個</div>' +
-                '<a class="btn navigation" href="http://maps.google.com.tw/maps?q=' + getMaskData.features[i].properties.address + '">Google 路線導航</a>';
+                '</div>' +
+                '<a class="btn navigation" href="'+ goNavigation(getMaskData.features[i].properties) + '" target="_blank">Google 路線導航</a>';
 
             // 依庫存數量判定顏色
             // 灰色:庫存=0
@@ -103,9 +108,9 @@ let getMask = new XMLHttpRequest();
             ];
         }
         // 導航
-        function goNavigation(){
+        function goNavigation(pharmacy){
             return[
-                //TODO:地址處理
+                "https://www.google.com/maps/search/?api=1&query=" + pharmacy.name + "+" + pharmacy.address
             ];
         }
     }
@@ -142,4 +147,52 @@ function getColor(d) {
            d > 50   ? '#FD8D3C' :
            d > 0    ? '#E31A1C' : 
                       '#6C757D';
+}
+
+/** 
+ * 取得今天是星期幾
+ * new Date().getDay(); // 會是 0 ~ 6 的值, 分別代表下述:
+ *  0 星期日, 
+ *  1 星期一
+ *  2 星期二
+ *  3 星期三
+ *  4 星期四
+ *  5 星期五
+ *  6 星期六
+*/
+function getDay(){
+    const dayList = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const today = new Date().getDay();
+    return dayList[today];
+};
+
+// 取得營業狀況
+function getBusinessInfo(time){
+    // var time = "星期一上午看診、星期二上午看診、星期三上午看診、星期四上午看診、星期五上午看診、星期六上午看診、星期日上午看診、星期一下午看診、星期二下午看診、星期三下午看診、星期四下午看診、星期五下午看診、星期六下午看診、星期日下午休診、星期一晚上看診、星期二晚上看診、星期三晚上看診、星期四晚上看診、星期五晚上看診、星期六晚上看診、星期日晚上看診"
+    time = time.split("、"); //營業時間轉物件
+    var today = new Object();
+    today.week = getDay(); //取得今天是星期幾
+    today.morning = false;
+    today.afternoon = false;
+    today.evening = false;
+    //搜尋今日營業狀況
+    for (var i = 0; i < time.length; i++) {
+        if(time[i].match(today.week+"上午看診"))
+            today.morning = true
+        if(time[i].match(today.week+"下午看診"))
+            today.afternoon = true
+        if(time[i].match(today.week+"晚上看診"))
+            today.evening = true
+    }
+
+    if (today.morning && today.afternoon && today.evening) {
+        return '<div class="btn open">今日營業</div>';
+    }else if (!today.morning && !today.afternoon && !today.evening) {
+        return '<div class="btn close">今日休息</div>';
+    }else{
+        var info = '<div class="btn business-info '+ (today.morning ? 'open' : 'close') + '">上午' + (today.morning ? '營業' : '休息') + '</div>' +
+        '<div class="btn business-info '+ (today.afternoon ? 'open' : 'close') + '">下午' + (today.afternoon ? '營業' : '休息') + '</div>' +
+        '<div class="btn business-info '+ (today.evening ? 'open' : 'close') + '">晚上' + (today.evening ? '營業' : '休息') + '</div>'
+        return info;
+    }
 }
