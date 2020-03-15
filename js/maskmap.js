@@ -65,21 +65,21 @@ let getMask = new XMLHttpRequest();
 
             // 依庫存數量判定顏色
             // 灰色:庫存=0
-            if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child == 0) {
+            if (getMaskData.features[i].properties.mask_adult == 0) {
                 circleMarkerOptions = {
                     weight: 2,
                     color: "#6C757D"
                 };
                 markers.addLayer(L.marker(getLatLng(), {icon: greyIcon}).bindPopup(infoStr));
             // 紅色:庫存<50
-            } else if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child < 50) {
+            } else if (getMaskData.features[i].properties.mask_adult < 50) {
                 circleMarkerOptions = {
                     weight: 2,
                     color: "#E31A1C"
                 };
                 markers.addLayer(L.marker(getLatLng(), {icon: redIcon}).bindPopup(infoStr));
             // 黃色:庫存<50
-            } else if (getMaskData.features[i].properties.mask_adult + getMaskData.features[i].properties.mask_child < 100) {
+            } else if (getMaskData.features[i].properties.mask_adult < 100) {
                 circleMarkerOptions = {
                     weight: 2,
                     color: "#FD8D3C"
@@ -130,7 +130,7 @@ infoLegend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info-legend'),
         grades = [0, 50, 100],
         labels = [];
-    div.innerHTML = '口罩數量<br>' +
+    div.innerHTML = '<b>成人</b>口罩數量<br>' +
                     '<i style="background:' + getColor(grades[0]) + '"></i> 無庫存 <br>'
     for (var i = 0; i < grades.length; i++) {
         div.innerHTML +=
